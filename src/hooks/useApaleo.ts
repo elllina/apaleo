@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { useApaleoAuthRequest, exchangeCodeForTokens } from '../api/auth';
-import type { AuthSessionResult } from 'expo-auth-session';
+import { useApaleoAuthRequest, loginWithClientCredentials } from '../api/auth';
 
 export function useApaleoAuth() {
-  const { isAuthenticated, isLoading, error, login, logout, initialize } = useAuthStore();
+  const { isAuthenticated, isLoading, error, login, loginDemo, logout, initialize } = useAuthStore();
   const [request, response, promptAsync] = useApaleoAuthRequest();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -42,6 +41,18 @@ export function useApaleoAuth() {
     await promptAsync();
   }, [request, promptAsync]);
 
+  // Demo login using client credentials (for testing)
+  const signInDemo = useCallback(async () => {
+    setIsProcessing(true);
+    try {
+      await loginDemo();
+    } catch (err) {
+      console.error('Demo login error:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [loginDemo]);
+
   const signOut = useCallback(async () => {
     await logout();
   }, [logout]);
@@ -52,6 +63,7 @@ export function useApaleoAuth() {
     isReady: !!request,
     error,
     signIn,
+    signInDemo,
     signOut,
   };
 }

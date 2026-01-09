@@ -2,10 +2,27 @@ import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import { AuthTokens, User } from '../types';
-import { APALEO_AUTH_URL, APALEO_CLIENT_ID, APALEO_REDIRECT_URI, STORAGE_KEYS } from '../utils/constants';
+import { APALEO_AUTH_URL, APALEO_CLIENT_ID, APALEO_CLIENT_SECRET, APALEO_REDIRECT_URI, STORAGE_KEYS } from '../utils/constants';
 
 // Enable web browser for OAuth
 WebBrowser.maybeCompleteAuthSession();
+
+// Simple base64 encoding for credentials
+function encodeBase64(str: string): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let output = '';
+  for (let i = 0; i < str.length; i += 3) {
+    const byte1 = str.charCodeAt(i);
+    const byte2 = str.charCodeAt(i + 1);
+    const byte3 = str.charCodeAt(i + 2);
+    const enc1 = byte1 >> 2;
+    const enc2 = ((byte1 & 3) << 4) | (byte2 >> 4);
+    const enc3 = isNaN(byte2) ? 64 : ((byte2 & 15) << 2) | (byte3 >> 6);
+    const enc4 = isNaN(byte3) ? 64 : byte3 & 63;
+    output += chars.charAt(enc1) + chars.charAt(enc2) + chars.charAt(enc3) + chars.charAt(enc4);
+  }
+  return output;
+}
 
 // Apaleo OAuth discovery document
 const discovery: AuthSession.DiscoveryDocument = {
@@ -249,4 +266,58 @@ export async function logout(): Promise<void> {
   }
   await clearTokens();
   await clearUser();
+}
+
+/**
+ * Get access token using Client Credentials flow (for server-to-server or testing)
+ * This doesn't require user interaction but has limited access to user-specific data
+ */
+export async function getClientCredentialsToken(): Promise<AuthTokens> {
+  const credentials = encodeBase64(`${APALEO_CLIENT_ID}:${APALEO_CLIENT_SECRET}`);
+
+  const response = await fetch(`${APALEO_AUTH_URL}/connect/token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${credentials}`,
+    },
+    body: 'grant_type=client_credentials',
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to get client credentials token: ${error}`);
+  }
+
+  const data = await response.json();
+
+  const tokens: AuthTokens = {
+    accessToken: data.access_token,
+    refreshToken: '', // Client credentials don't have refresh tokens
+    expiresAt: Date.now() + (data.expires_in * 1000),
+    tokenType: data.token_type ?? 'Bearer',
+  };
+
+  await saveTokens(tokens);
+  return tokens;
+}
+
+/**
+ * Login with client credentials (for demo/testing without user OAuth)
+ */
+export async function loginWithClientCredentials(): Promise<AuthTokens> {
+  const tokens = await getClientCredentialsToken();
+
+  // Create a demo user since client credentials don't provide user info
+  const demoUser: User = {
+    id: 'demo-user',
+    email: 'demo@shm-hotel.com',
+    firstName: 'Demo',
+    lastName: 'User',
+    preferredLanguage: 'en',
+    createdAt: new Date().toISOString(),
+  };
+
+  await saveUser(demoUser);
+  return tokens;
 }

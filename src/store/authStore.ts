@@ -9,6 +9,7 @@ import {
   getValidAccessToken,
   fetchUserInfo,
   exchangeCodeForTokens,
+  loginWithClientCredentials,
 } from '../api/auth';
 import { getOrCreateUser } from '../api/shm';
 
@@ -23,6 +24,7 @@ interface AuthState {
   // Actions
   initialize: () => Promise<void>;
   login: (code: string, codeVerifier: string) => Promise<void>;
+  loginDemo: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   clearError: () => void;
@@ -116,6 +118,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         isLoading: false,
         error: error instanceof Error ? error.message : 'Login failed',
+      });
+      throw error;
+    }
+  },
+
+  // Demo login using client credentials (for testing without user OAuth)
+  loginDemo: async () => {
+    try {
+      set({ isLoading: true, error: null });
+
+      // Get tokens using client credentials
+      const tokens = await loginWithClientCredentials();
+
+      // Load the demo user that was created
+      const user = await loadUser();
+
+      set({
+        tokens,
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch (error) {
+      console.error('Demo login error:', error);
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Demo login failed',
       });
       throw error;
     }

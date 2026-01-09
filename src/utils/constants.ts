@@ -1,7 +1,8 @@
 // API Configuration
 export const APALEO_API_URL = 'https://api.apaleo.com';
 export const APALEO_AUTH_URL = 'https://identity.apaleo.com';
-export const APALEO_CLIENT_ID = process.env.EXPO_PUBLIC_APALEO_CLIENT_ID || '';
+export const APALEO_CLIENT_ID = process.env.EXPO_PUBLIC_APALEO_CLIENT_ID || 'DTAF-SP-8899';
+export const APALEO_CLIENT_SECRET = process.env.EXPO_PUBLIC_APALEO_CLIENT_SECRET || '';
 export const APALEO_REDIRECT_URI = 'shm://auth/callback';
 
 // SHM Backend API (for credits, subscriptions)

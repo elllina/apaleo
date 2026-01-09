@@ -13,7 +13,7 @@ import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS, SHADOWS } from '../../src/u
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { isAuthenticated, isLoading, isReady, error, signIn } = useApaleoAuth();
+  const { isAuthenticated, isLoading, isReady, error, signIn, signInDemo } = useApaleoAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -66,21 +66,30 @@ export default function LoginScreen() {
         {/* Divider */}
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or continue with</Text>
+          <Text style={styles.dividerText}>or</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Social Login Buttons */}
-        <View style={styles.socialButtons}>
-          <TouchableOpacity style={styles.socialButton} disabled>
-            <Text style={styles.socialIcon}>G</Text>
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton} disabled>
-            <Text style={styles.socialIcon}>A</Text>
-            <Text style={styles.socialText}>Apple</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Demo Login Button */}
+        <TouchableOpacity
+          style={[styles.demoButton, isLoading && styles.demoButtonDisabled]}
+          onPress={signInDemo}
+          disabled={isLoading}
+          activeOpacity={0.8}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={COLORS.primary} />
+          ) : (
+            <>
+              <Text style={styles.demoIcon}>🧪</Text>
+              <Text style={styles.demoText}>Continue with Demo Account</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.demoNote}>
+          Use demo mode to explore the app with test data
+        </Text>
 
         {/* Terms */}
         <Text style={styles.termsText}>
@@ -193,33 +202,34 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     marginHorizontal: SPACING.md,
   },
-  socialButtons: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-    marginBottom: SPACING.xl,
-  },
-  socialButton: {
-    flex: 1,
+  demoButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.background,
-    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.surface,
+    paddingVertical: SPACING.lg,
     borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    opacity: 0.5, // Disabled state
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    marginBottom: SPACING.md,
   },
-  socialIcon: {
+  demoButtonDisabled: {
+    opacity: 0.6,
+  },
+  demoIcon: {
     fontSize: TYPOGRAPHY.fontSize.lg,
-    fontWeight: '700',
     marginRight: SPACING.sm,
-    color: COLORS.text.primary,
   },
-  socialText: {
+  demoText: {
+    color: COLORS.primary,
     fontSize: TYPOGRAPHY.fontSize.md,
-    color: COLORS.text.primary,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  demoNote: {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    color: COLORS.text.disabled,
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
   },
   termsText: {
     fontSize: TYPOGRAPHY.fontSize.xs,
